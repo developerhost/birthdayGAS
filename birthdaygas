@@ -1,0 +1,76 @@
+function myFunction() {
+  const spreadsheet         = SpreadsheetApp.openById('1exbeEc3knr0GwtIPs7_wNruo_EW4knmfb_wK0Z5Rh70') //スプレッドを取得
+
+  const sheet1              = spreadsheet.getSheetByName('データ'); //シートを取得
+  
+  if (sheet1 === null) {
+    console.log('名前や誕生日を記録したシート名を正しく設定してください');  
+  }
+  
+  const range              = sheet1.getDataRange();
+  const num_rows           = range.getNumRows();
+  var values               = range.getValues();  // データを取得
+  
+  const default_subject    = sheet1.getRange("H2").getValue();
+
+  const sheet2             = spreadsheet.getSheetByName('本文');
+  
+  if (sheet2 === null) {
+    console.log('本文をA1セルに書いたシート名を正しく設定してください');  
+  }
+  
+  const text               = sheet2.getRange(1,1).getValue(); //本文のシートを取得
+
+  const today              = new Date(); 
+  const this_day           = today.getDate();
+  const this_month         = today.getMonth() + 1; //日付を取得
+
+  for (var i = 1; i < num_rows; i++) {
+  var birthDate            = new Date(values[i][2]);
+  var birthday             =　birthDate.getDate();
+  var birthmonth           =　birthDate.getMonth() + 1;
+ 
+  if (birthday !== this_day || birthmonth　!== this_month) {  // 誕生日が同じならメール送信
+      continue; 
+    }
+
+  var name                 = values[i][0];
+  var to                   = values[i][3];
+  if (to === "") {
+      continue;
+    }
+  var subject              = values[i][4];
+  if(subject === ""){
+      subject = default_subject;
+    }
+
+  var body                 = text.replace(/{名前}/g, name);
+  body = name + "さん\n\n" + body;
+
+    GmailApp.sendEmail(to, subject, body);  // メール送信
+  }
+}
+   
+  
+  
+  /*
+・  質問中のエラーは、「日付」の値が日付(数値の一種)と認識されていないため。日付になり得る文字列なら、new Date()の引数に指定してやればいい。
+
+・スプレッドシートIDを指定して得られるのは、シートではなく(シートの集合としての)スプレッドシートのオブジェクト。ここから直接getRangeすると、最初のシートが対象となる。
+しかし、スプレッドシートに対するgetRangeは引数のバリエーションが少ないので、質問のコードのような(行番号, 列番号)の指定はできない。
+
+・また、提示されたリンク先のページでは、本文は同じシートに書かれているが、質問では別のシート「本文」のA1を参照するので、このスプレッドシートは2つのシートを持つはず。
+こういうときは、シートごとのオブジェクトを取得して操作したほうがいい。getRangeのバリエーションも豊富だ。
+
+・以下のコードでは、名前・誕生日・メールアドレスなどのリストが書かれたシートを(便宜的に)「シート1」としている。
+もっとふさわしいシート名を付けているなら、getSheetByNameの引数を変更すること。このシートのオブジェクトをsheet1として取得し、リスト全体をvaluesに読み込んでいる。
+
+・「本文」シートのオブジェクトはsheet2として取得し、A1セルに書かれた本文をtextに読み込んでいる。
+そういえば、件名のデフォルト値(リストの書かれたシートのE2セルの値を利用している)も、こっちのB1とかA2とかに書いた方がいいのでは?
+
+・forループでは、「日付」の値から月・日の値を読み取り、今日の月・日と一致する場合のみメール送信の処理を行なう。
+そういえば、どこにも「生年月日」の値は使っていないが何のためにあるのかな?
+
+・メール送信処理では、名前、メールアドレス、(個別の)件名をリストから読み取り、メール本文を(名前を置換する処理なども含めて)生成してから、メールを送信している。元のコードでは名前をシートから読み取っていたが、リスト全体を読み込んだvalueに名前も含まれるので、そちらを使うほうが高速だ。
+  */
+  
