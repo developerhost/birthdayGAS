@@ -1,5 +1,5 @@
 function myFunction() {
-  const spreadsheet         = SpreadsheetApp.openById('1exbeEc3knr0GwtIPs7_wNruo_EW4knmfb_wK0Z5Rh70') //スプレッドを取得
+  const spreadsheet         = SpreadsheetApp.openById('スプレッドのID') //スプレッドを取得
 
   const sheet1              = spreadsheet.getSheetByName('データ'); //シートを取得
   
